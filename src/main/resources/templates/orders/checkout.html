@@ -1,10 +1,339 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - ShopNest</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .checkout-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .checkout-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e9ecef;
+            z-index: 1;
+        }
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+        .step-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: bold;
+        }
+        .checkout-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .payment-method {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-method:hover, .payment-method.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .payment-method.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+    </style>
 </head>
 <body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    <div class="container">
+        <a class="navbar-brand text-primary" th:href="@{/}">
+            <i class="fas fa-shopping-bag me-2"></i>ShopNest
+        </a>
+    </div>
+</nav>
 
+<!-- Main Content -->
+<div class="container py-5">
+    <!-- Checkout Steps -->
+    <div class="checkout-steps">
+        <div class="step active">
+            <div class="step-number">1</div>
+            <div class="step-label">Shipping</div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-label">Payment</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Checkout Form -->
+        <div class="col-lg-8">
+            <form th:action="@{/orders/place}" method="post" id="checkoutForm">
+                <!-- Shipping Address -->
+                <div class="checkout-section">
+                    <h4 class="fw-bold mb-4">
+                        <i class="fas fa-truck me-2"></i>Shipping Address
+                    </h4>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" placeholder="Enter your phone number" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Address *</label>
+                        <input type="text" class="form-control" placeholder="Street address" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">City *</label>
+                            <input type="text" class="form-control" placeholder="City" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">State *</label>
+                            <input type="text" class="form-control" placeholder="State" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">PIN Code *</label>
+                            <input type="text" class="form-control" placeholder="PIN Code" required>
+                        </div>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="saveAddress">
+                        <label class="form-check-label" for="saveAddress">
+                            Save this address for future orders
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="checkout-section">
+                    <h4 class="fw-bold mb-4">
+                        <i class="fas fa-credit-card me-2"></i>Payment Method
+                    </h4>
+
+                    <div class="payment-method selected" onclick="selectPayment('razorpay')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" checked>
+                            <label class="form-check-label fw-bold" for="razorpay">
+                                Razorpay
+                            </label>
+                        </div>
+                        <p class="text-muted mb-0 mt-2">
+                            <i class="fas fa-lock me-1"></i>Secure payment with Razorpay
+                        </p>
+                    </div>
+
+                    <div class="payment-method" onclick="selectPayment('cod')">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentMethod" id="cod">
+                            <label class="form-check-label fw-bold" for="cod">
+                                Cash on Delivery
+                            </label>
+                        </div>
+                        <p class="text-muted mb-0 mt-2">
+                            Pay when you receive your order
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Order Notes -->
+                <div class="checkout-section">
+                    <h4 class="fw-bold mb-4">
+                        <i class="fas fa-sticky-note me-2"></i>Order Notes
+                    </h4>
+                    <textarea class="form-control" rows="3" placeholder="Any special instructions for your order..."></textarea>
+                </div>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="checkout-section" style="position: sticky; top: 20px;">
+                <h4 class="fw-bold mb-4">Order Summary</h4>
+
+                <!-- Order Items -->
+                <div class="mb-4">
+                    <div class="order-summary-item">
+                        <div>
+                            <strong>iPhone 14</strong>
+                            <div class="text-muted">Qty: 1</div>
+                        </div>
+                        <strong>₹79,999</strong>
+                    </div>
+                    <div class="order-summary-item">
+                        <div>
+                            <strong>Nike Air Max</strong>
+                            <div class="text-muted">Qty: 2</div>
+                        </div>
+                        <strong>₹11,998</strong>
+                    </div>
+                </div>
+
+                <!-- Price Breakdown -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>₹91,997</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax</span>
+                        <span>₹11,040</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong>Total</strong>
+                        <strong>₹103,037</strong>
+                    </div>
+                </div>
+
+                <!-- Place Order Button -->
+                <button type="submit" form="checkoutForm" class="btn btn-primary w-100 btn-lg">
+                    <i class="fas fa-lock me-2"></i>Place Order
+                </button>
+
+                <!-- Security Badges -->
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-lock me-1"></i>Your payment information is secure
+                    </small>
+                </div>
+
+                <!-- Trust Indicators -->
+                <div class="row text-center mt-4">
+                    <div class="col-6">
+                        <i class="fas fa-shield-alt text-success mb-2"></i>
+                        <small class="d-block">SSL Secure</small>
+                    </div>
+                    <div class="col-6">
+                        <i class="fas fa-user-shield text-primary mb-2"></i>
+                        <small class="d-block">Privacy Protected</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function selectPayment(method) {
+        // Update radio button
+        document.getElementById(method).checked = true;
+
+        // Update UI
+        document.querySelectorAll('.payment-method').forEach(pm => {
+            pm.classList.remove('selected');
+        });
+        event.currentTarget.classList.add('selected');
+    }
+
+    // Form validation
+    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Basic validation
+        const requiredFields = this.querySelectorAll('[required]');
+        let valid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                valid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (valid) {
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            submitBtn.disabled = true;
+
+            // Simulate processing
+            setTimeout(() => {
+                alert('Order placed successfully! Redirecting to payment...');
+                // In real implementation, redirect to payment page
+                window.location.href = '/orders/payment?orderId=123';
+            }, 2000);
+        } else {
+            alert('Please fill in all required fields.');
+        }
+    });
+
+    // Real-time validation
+    document.querySelectorAll('input[required]').forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+    });
+</script>
 </body>
 </html>
