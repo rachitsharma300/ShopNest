@@ -1,10 +1,516 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - ShopNest</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .product-image {
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px 15px 0 0;
+        }
+        .discount-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4757;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .stock-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+        }
+        .filter-sidebar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        .price-range {
+            accent-color: #667eea;
+        }
+        .category-filter {
+            list-style: none;
+            padding: 0;
+        }
+        .category-filter li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .category-filter li:hover {
+            color: #667eea;
+            padding-left: 5px;
+        }
+        .category-filter li.active {
+            color: #667eea;
+            font-weight: bold;
+            padding-left: 10px;
+            border-left: 3px solid #667eea;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box .form-control {
+            padding-left: 40px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .sort-dropdown .dropdown-menu {
+            width: 200px;
+        }
+        .view-options .btn {
+            padding: 8px 12px;
+        }
+        .pagination .page-link {
+            border-radius: 8px;
+            margin: 0 2px;
+            border: none;
+            color: #495057;
+        }
+        .pagination .page-item.active .page-link {
+            background: #667eea;
+            border-color: #667eea;
+        }
+    </style>
 </head>
 <body>
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+        <a class="navbar-brand text-primary" th:href="@{/}">
+            <i class="fas fa-shopping-bag me-2"></i>ShopNest
+        </a>
 
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/products}">Products</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/cart}">Cart</a>
+                </li>
+            </ul>
+
+            <div class="d-flex">
+                <a th:href="@{/cart}" class="btn btn-outline-primary me-2 position-relative">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
+                </a>
+                <a th:href="@{/auth/login}" class="btn btn-outline-primary">Login</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active">Products</li>
+                </ol>
+            </nav>
+            <h1 class="fw-bold">Our Products</h1>
+            <p class="text-muted">Discover amazing products at unbeatable prices</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-sidebar">
+                <!-- Search -->
+                <div class="search-box mb-4">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="form-control" placeholder="Search products..." id="searchInput">
+                </div>
+
+                <!-- Categories -->
+                <h6 class="fw-bold mb-3">Categories</h6>
+                <ul class="category-filter">
+                    <li class="active" onclick="filterByCategory('all')">All Categories</li>
+                    <li onclick="filterByCategory('electronics')">Electronics</li>
+                    <li onclick="filterByCategory('fashion')">Fashion</li>
+                    <li onclick="filterByCategory('home')">Home & Kitchen</li>
+                    <li onclick="filterByCategory('sports')">Sports</li>
+                    <li onclick="filterByCategory('books')">Books</li>
+                </ul>
+
+                <!-- Price Range -->
+                <h6 class="fw-bold mb-3 mt-4">Price Range</h6>
+                <input type="range" class="form-range price-range mb-2" min="0" max="100000" step="1000" value="50000" id="priceRange">
+                <div class="d-flex justify-content-between">
+                    <small>₹0</small>
+                    <small id="priceRangeValue">₹50,000</small>
+                    <small>₹1,00,000</small>
+                </div>
+
+                <!-- Brands -->
+                <h6 class="fw-bold mb-3 mt-4">Brands</h6>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="brandApple">
+                    <label class="form-check-label" for="brandApple">Apple</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="brandSamsung">
+                    <label class="form-check-label" for="brandSamsung">Samsung</label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="brandNike">
+                    <label class="form-check-label" for="brandNike">Nike</label>
+                </div>
+
+                <!-- Ratings -->
+                <h6 class="fw-bold mb-3 mt-4">Customer Ratings</h6>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="rating5">
+                    <label class="form-check-label" for="rating5">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="rating4">
+                    <label class="form-check-label" for="rating4">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i> & above
+                    </label>
+                </div>
+
+                <button class="btn btn-primary w-100 mt-4" onclick="applyFilters()">
+                    <i class="fas fa-filter me-2"></i>Apply Filters
+                </button>
+                <button class="btn btn-outline-secondary w-100 mt-2" onclick="resetFilters()">
+                    <i class="fas fa-redo me-2"></i>Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <!-- Toolbar -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="text-muted" id="productCount">Showing 8 of 156 products</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="sort-dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort me-2"></i>Sort by: Featured
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="sortProducts('featured')">Featured</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortProducts('price-low')">Price: Low to High</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortProducts('price-high')">Price: High to Low</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortProducts('newest')">Newest First</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="sortProducts('rating')">Customer Ratings</a></li>
+                        </ul>
+                    </div>
+                    <div class="view-options btn-group">
+                        <button class="btn btn-outline-secondary active" onclick="setViewMode('grid')">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="setViewMode('list')">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="row" id="productsGrid">
+                <!-- Product 1 -->
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card product-card">
+                        <div class="position-relative">
+                            <img src="/images/iphone14.jpg" class="card-img-top product-image" alt="iPhone 14">
+                            <span class="discount-badge">20% OFF</span>
+                            <span class="stock-badge badge bg-success">In Stock</span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title mb-1">iPhone 14</h6>
+                            <p class="card-text text-muted small mb-2">Latest Apple smartphone with advanced features</p>
+
+                            <div class="rating mb-2">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star-half-alt text-warning"></i>
+                                <small class="text-muted">(4.5)</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h5 text-primary mb-0">₹79,999</span>
+                                <span class="text-muted text-decoration-line-through small">₹99,999</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/products/{id}(id=1)}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart(1)">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 2 -->
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card product-card">
+                        <div class="position-relative">
+                            <img src="/images/samsung-s23.jpg" class="card-img-top product-image" alt="Samsung S23">
+                            <span class="discount-badge">15% OFF</span>
+                            <span class="stock-badge badge bg-success">In Stock</span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title mb-1">Samsung Galaxy S23</h6>
+                            <p class="card-text text-muted small mb-2">Powerful Android flagship phone</p>
+
+                            <div class="rating mb-2">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="far fa-star text-warning"></i>
+                                <small class="text-muted">(4.0)</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h5 text-primary mb-0">₹69,999</span>
+                                <span class="text-muted text-decoration-line-through small">₹82,999</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/products/{id}(id=2)}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart(2)">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 3 -->
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card product-card">
+                        <div class="position-relative">
+                            <img src="/images/nike-shoes.jpg" class="card-img-top product-image" alt="Nike Shoes">
+                            <span class="stock-badge badge bg-success">In Stock</span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title mb-1">Nike Air Max</h6>
+                            <p class="card-text text-muted small mb-2">Comfortable sports shoes for everyday wear</p>
+
+                            <div class="rating mb-2">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <small class="text-muted">(5.0)</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h5 text-primary mb-0">₹5,999</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/products/{id}(id=3)}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart(3)">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product 4 -->
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card product-card">
+                        <div class="position-relative">
+                            <img src="/images/macbook-pro.jpg" class="card-img-top product-image" alt="MacBook Pro">
+                            <span class="stock-badge badge bg-warning">Low Stock</span>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title mb-1">MacBook Pro</h6>
+                            <p class="card-text text-muted small mb-2">Professional laptop for creators</p>
+
+                            <div class="rating mb-2">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star-half-alt text-warning"></i>
+                                <small class="text-muted">(4.7)</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h5 text-primary mb-0">₹1,99,999</span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/products/{id}(id=4)}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart(4)">
+                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add more products as needed -->
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Product pagination" class="mt-5">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Price range display
+    document.getElementById('priceRange').addEventListener('input', function() {
+        document.getElementById('priceRangeValue').textContent = '₹' +
+            parseInt(this.value).toLocaleString();
+    });
+
+    function filterByCategory(category) {
+        // Update active category
+        document.querySelectorAll('.category-filter li').forEach(li => {
+            li.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // In real implementation, filter products via AJAX
+        console.log('Filtering by category:', category);
+    }
+
+    function applyFilters() {
+        const priceRange = document.getElementById('priceRange').value;
+        const searchTerm = document.getElementById('searchInput').value;
+
+        // In real implementation, apply filters via AJAX
+        console.log('Applying filters - Price:', priceRange, 'Search:', searchTerm);
+        alert('Filters applied!');
+    }
+
+    function resetFilters() {
+        document.getElementById('priceRange').value = 50000;
+        document.getElementById('priceRangeValue').textContent = '₹50,000';
+        document.getElementById('searchInput').value = '';
+
+        document.querySelectorAll('.form-check-input').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        document.querySelectorAll('.category-filter li').forEach(li => {
+            li.classList.remove('active');
+        });
+        document.querySelector('.category-filter li').classList.add('active');
+    }
+
+    function sortProducts(method) {
+        // In real implementation, sort products via AJAX
+        console.log('Sorting by:', method);
+        alert(`Sorted by ${method}`);
+    }
+
+    function setViewMode(mode) {
+        const gridBtn = document.querySelector('.view-options .btn:first-child');
+        const listBtn = document.querySelector('.view-options .btn:last-child');
+
+        if (mode === 'grid') {
+            gridBtn.classList.add('active');
+            listBtn.classList.remove('active');
+            document.getElementById('productsGrid').className = 'row';
+        } else {
+            gridBtn.classList.remove('active');
+            listBtn.classList.add('active');
+            document.getElementById('productsGrid').className = 'row list-view';
+            // Add list view specific styles
+        }
+    }
+
+    function addToCart(productId) {
+        // In real implementation, make API call to add to cart
+        alert(`Product ${productId} added to cart!`);
+
+        // Update cart count
+        const cartCount = document.querySelector('.badge');
+        cartCount.textContent = parseInt(cartCount.textContent) + 1;
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        // In real implementation, search products via AJAX
+        if (searchTerm.length >= 3) {
+            console.log('Searching for:', searchTerm);
+        }
+    });
+</script>
 </body>
 </html>
