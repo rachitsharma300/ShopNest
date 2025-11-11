@@ -1,0 +1,46 @@
+/* Admin panel specific styles */
+.admin-sidebar {
+    min-height: 100vh;
+    background: #2c3e50;
+}
+
+.admin-sidebar .nav-link {
+    color: #ecf0f1;
+    padding: 15px 20px;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background: #34495e;
+    border-left-color: var(--primary-color);
+}
+
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Admin table styles */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    padding: 12px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.admin-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
