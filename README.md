@@ -6,7 +6,8 @@ shopnest-backend/
 │   ├── config/
 │   │   ├── SecurityConfig.java
 │   │   ├── WebMvcConfig.java
-│   │   └── RazorpayConfig.java
+│   │   ├── RazorpayConfig.java
+│   │   └── DataSeeder.java
 │   ├── controller/
 │   │   ├── HomeController.java
 │   │   ├── UserController.java
@@ -48,9 +49,10 @@ shopnest-backend/
 │   │   └── PaymentRequest.java
 │   └── exception/
 │       ├── GlobalExceptionHandler.java
-│       └── UserNotFoundException.java
+│       ├── UserNotFoundException.java
+│       └── ProductNotFoundException.java
 ├── src/main/resources/
-│   ├── templates/ (Thymeleaf - 8-10 files)
+│   ├── templates/ 
 │   │   ├── home.html
 │   │   ├── auth/
 │   │   │   ├── login.html
@@ -69,7 +71,18 @@ shopnest-backend/
 │   │       └── orders.html
 │   ├── static/
 │   │   ├── css/
+│   │   │   ├── style.css
+│   │   │   ├── auth.css
+│   │   │   ├── admin.css
+│   │   │   ├── cart.css
+│   │   │   └── products.css
 │   │   ├── js/
+│   │   │   ├── main.js
+│   │   │   ├── auth.js
+│   │   │   ├── cart.js
+│   │   │   ├── orders.js
+│   │   │   ├── payment.js
+│   │   │   └── products.js
 │   │   └── images/
 │   └── application.properties
 └── src/test/java/com/shopnest/
@@ -77,8 +90,12 @@ shopnest-backend/
     │   ├── UserServiceTest.java
     │   ├── ProductServiceTest.java
     │   ├── CartServiceTest.java
-    │   └── OrderServiceTest.java
+    │   ├── OrderServiceTest.java
+    │   └── PaymentServiceTest.java
     └── controller/
         ├── UserControllerTest.java
-        └── ProductControllerTest.java
+        ├── ProductControllerTest.java
+        ├── CartControllerTest.java
+        ├── OrderControllerTest.java
+        └── PaymentControllerTest.java
 ```
